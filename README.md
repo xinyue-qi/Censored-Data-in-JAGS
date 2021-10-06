@@ -1,6 +1,6 @@
 # Censored-Data-in-JAGS
 
-## The default approach
+## The default approach for censored data modeling in JAGS
 ```
 model{ # Model 1
         for (o in 1:O){ # O is the number of observed cases;
@@ -16,7 +16,7 @@ model{ # Model 1
         # prior for theta’s
 }
 ```
-## The proposed approach
+## The proposed approach in JAGS
 
 ```
 model{ # Model 2
