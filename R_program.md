@@ -3,11 +3,34 @@
 ```
 # load package
 library(survival)
-
-# alternative strategy
 leuk.obs<-subset(leukemia,status==1)
 leuk.cen<-subset(leukemia,status==0)
 leuk.all<-rbind(leuk.obs,leuk.cen)
+
+# default: dinterval()
+Y = leuk.all$time
+is.na(Y) <- leuk.all$status==0
+R <- rep(1, nrow(leuk.cen))          # censoring indicator: R = 1 if RC
+J1 <-nrow(leuk.obs)
+J2 <-length(R)
+lim <- leuk.cen$time+leuk.cen$status
+group <- as.numeric(as.factor(leuk.all$x))
+
+data <- list(O=J1,J=J2,Y=Y,R=R,lim=lim,group=group)
+inits <- function() {list(b0=rnorm(1),b1=rnorm(1))}
+parameters <- c("lambda", "b0", "b1")
+
+library(rjags)
+model.1 <- jags.model("modelfile.txt",data=data,inits=inits,
+                      n.chains=3, n.adapt=1000)
+update(model.1,30000) # burn-in
+fit.1 <- coda.samples(model=model.1, variable.names=parameters,
+                      n.iter=30000, thin=3) 
+
+res1 <- round(summary(fit.1)[[2]][,c(3,1,5)],4)
+
+
+# alternative strategy
 Y = leuk.obs$time
 Z = leuk.cen$status     
 cut = leuk.cen$time     # censoring time
@@ -16,7 +39,7 @@ J2 <-length(Z)
 group <- as.numeric(as.factor(leuk.all$x))
 
 tau0 <- tau1 <- 0.01
-data <-list(J1=J1, J2=J2, Y=Y, Z=Z, cut=cut, group=group, tau0=tau0, tau1=tau1)
+data <-list(O=J1, C=J2, Y=Y, Z=Z, cut=cut, group=group, tau0=tau0, tau1=tau1)
 inits <- function() {list(b0=rnorm(1),b1=rnorm(1))}
 parameters <- c("lambda", "b0", "b1") 
 
