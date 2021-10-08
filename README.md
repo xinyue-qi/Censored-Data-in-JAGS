@@ -1,5 +1,9 @@
 # Censored-Data-in-JAGS
 
+### Objective:
+To establish an automatic approach to specifying the correct deviance function in ``JAGS``, we propose a simple and generic alternative modeling strategy
+for the analysis of censored outcomes.
+
 ## The default approach for censored data modeling in JAGS
 ```
 model{ # Model 1
@@ -43,7 +47,7 @@ model{ # Model 2
 ### 1. Survival data
 
 ``Data``
-The survival data are openly available in the ``R`` package ``“survival”`` v3.2-11.
+The survival data (`leukemia`) are openly available in the ``R`` package ``“survival”`` v3.2-11.
 
 ``JAGS Model``
 
@@ -84,7 +88,7 @@ model{
 ### 2. Binomial data
 
 ``Data``
-The binomial data were derived from the literature listed in doi:10.1001/jamaoncol.2019.0393 and available in the public domain.
+The binomial data were derived from the literature listed in doi:10.1001/jamaoncol.2019.0393 and available in this repository (`AEdata.csv`).
 
 ``JAGS Model``
 
@@ -92,13 +96,11 @@ The binomial data were derived from the literature listed in doi:10.1001/jamaonc
 # Model A
 model{
 	for (j in 1:J1){
-       		Y[j] ~ dbin(theta.adj[j], N[j])
-		theta.adj[j] <- max(0.00001, min(theta, 0.99999))
+       		Y[j] ~ dbin(theta[j], N[j])
 	}
  
        	for (j in 1:J2){
-       		Z[j] ~ dbern(p.adj[j])
-		p.adj[j] <- max(0.00001, min(p[j], 0.99999))
+       		Z[j] ~ dbern(p[j])
 		p[j] <- pbin(cut[j], theta, N[j+J1])  #Y<=cut
 	}
 
@@ -106,15 +108,106 @@ model{
 }
 
 # Model B
+model{
+	for (j in 1:J1){
+       		Y[j] ~ dbin(theta[j], N[j])
+		theta[j] <- theta.group[group2[j]]
+	} 
+       	for (j in 1:J2){
+       		Z[j] ~ dbern(p[j])
+		p[j] <- pbin(cut[j], theta[j+J1], N[j+J1])  #Y<=cut
+		theta[j+J1] <- theta.group[group2[j+J1]]
+	}
+	for (i in 1:n.group2){
+		theta.group[i] ~ dbeta(1, 1)
+	}
+}
 
 # Model C
+model{
+	for (j in 1:J1){
+       		Y[j] ~ dbin(theta[j], N[j])
+		theta[j] <- theta.drug[drug[j]]
+	} 
+       	for (j in 1:J2){
+       		Z[j] ~ dbern(p[j])
+		p[j] <- pbin(cut[j], theta[j+J1], N[j+J1])  #Y<=cut
+		theta[j+J1] <- theta.drug[drug[j+J1]]
+	}
+	for (i in 1:n.drug){
+		theta.drug[i] ~ dbeta(1, 1)
+	}
+}
 
 # Model D
+model{
+	for (j in 1:J1){
+       		Y[j] ~ dbin(theta[j], N[j])
+		logit(theta[j]) <- theta.drug[drug[j]]
+	} 
+       	for (j in 1:J2){
+       		Z[j] ~ dbern(p[j])
+		p[j] <- pbin(cut[j], theta[j+J1], N[j+J1])  #Y<=cut
+		logit(theta[j+J1]) <- theta.drug[drug[j+J1]]
+	}
+	for (i in 1:n.drug){
+		theta.drug[i] <- mu+sigma.drug*sn.drug[i]
+		sn.drug[i] ~ dnorm(0, 1)
+	}
+	mu ~ dt(0, 10, 1)
+	sigma.drug ~ dt(0, a, 1)T(0,)
+}
 
 # Model E
+model{
+	for (j in 1:J1){
+       		Y[j] ~ dbin(theta[j], N[j])
+		cloglog(theta[j]) <- theta.drug[drug[j]]
+	} 
+       	for (j in 1:J2){
+       		Z[j] ~ dbern(p[j])
+		p[j] <- pbin(cut[j], theta[j+J1], N[j+J1])  #Y<=cut
+		cloglog(theta[j+J1]) <- theta.drug[drug[j+J1]]
+	}
+	for (i in 1:n.drug){
+		theta.drug[i] <- mu+sigma.drug*sn.drug[i]
+		sn.drug[i] ~ dnorm(0, 1)
+	}
+	sigma.drug ~ dt(0, a, 1)T(0,) # A = 2.5 
+	mu ~ dt(0, 10, 1)
+}
 
 # Model F
+model{
+	for (j in 1:J1){
+       		Y[j] ~ dbin(theta[j], N[j])
+		probit(theta[j]) <- theta.drug[drug[j]]
+	} 
+       	for (j in 1:J2){
+       		Z[j] ~ dbern(p[j])
+		p[j] <- pbin(cut[j], theta[j+J1], N[j+J1])  #Y<=cut
+		probit(theta[j+J1]) <- theta.drug[drug[j+J1]]
+	}
+	for (i in 1:n.drug){
+		theta.drug[i] <- mu+sigma.drug*sn.drug[i]
+		sn.drug[i] ~ dnorm(0, 1)
+	}
+	mu ~ dt(0, 10, 1)
+	sigma.drug ~ dt(0, a, 1)T(0,)
+}
 
 # Model G
+model{
+	for (j in 1:J1){
+       		Y[j] ~ dbin(theta[j], N[j])
+		theta[j] ~ dbeta(1,1)
+	}
+ 
+       	for (j in 1:J2){
+       		Z[j] ~ dbern(p[j])
+		p[j] <- pbin(cut[j], theta[j+J1], N[j+J1])  #Y<=cut
+		theta[j+J1] ~ dbeta(1,1)
+	}
+}
 
 ```
