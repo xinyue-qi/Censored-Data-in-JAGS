@@ -26,8 +26,9 @@ model.1 <- jags.model("modelfile.txt",data=data,inits=inits,
 update(model.1,30000) # burn-in
 fit.1 <- coda.samples(model=model.1, variable.names=parameters,
                       n.iter=30000, thin=3) 
+# deviance
+dic.pd1 <- dic.samples(model=model.1, n.iter=30000, type="pD"); dic.pd1 
 
-res1 <- round(summary(fit.1)[[2]][,c(3,1,5)],4)
 
 
 # alternative strategy
@@ -49,8 +50,8 @@ system.time(model.2 <- jags.model("modelfile.txt", data, inits,
 system.time(update(model.2,30000))
 system.time(fit.2 <- coda.samples(model=model.2, variable.names=parameters,
                                   n.iter=30000, thin=3))
-
-res2 <- round(summary(fit.2)[[2]][,c(3,1,5)],4)
+# deviance
+dic.pd2 <- dic.samples(model=model.2, n.iter=30000, type="pD"); dic.pd2 
 ```
 
 # Binomial Data
