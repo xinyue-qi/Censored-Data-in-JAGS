@@ -173,7 +173,7 @@ model{
 		theta.drug[i] <- mu+sigma.drug*sn.drug[i]
 		sn.drug[i] ~ dnorm(0, 1)
 	}
-	sigma.drug ~ dt(0, a, 1)T(0,) # A = 2.5 
+	sigma.drug ~ dt(0, a, 1)T(0,) 
 	mu ~ dt(0, 10, 1)
 }
 
@@ -211,3 +211,4 @@ model{
 }
 
 ```
+The R program to run JAGS models for two illustrative examples above is ready in the ``R_prgram.md``.
