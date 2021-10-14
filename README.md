@@ -211,4 +211,4 @@ model{
 }
 
 ```
-The R program to run JAGS models for two illustrative examples above is ready in the ``R_prgram.md``.
+The R code to run JAGS models for two illustrative examples above is available in the ``R_program.md``.
