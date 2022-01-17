@@ -35,7 +35,7 @@ model{ # Model 2
 	}
 	# block 3: interval censoring
 	for (i in 1:I){
-		Z2[i] ˜ dbern(p[i])
+		Z2[i] ˜ dbern(p[C+i])
 		p[C+i] <- F(cut2[i], theta[O+C+i]) - F(cut1[i], theta[O+C+i])
 	}
 	# prior for theta’s
